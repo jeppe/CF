@@ -7,7 +7,7 @@
 
 #define L   20
 
-char probeData[] = "./delicious/probe.data",trainData[] = "./delicious/train.data",resultData[] = "./delicious/results.data";
+char probeData[] = "./datas/probe.data",trainData[] = "./datas/train.data",resultData[] = "./datas/results.data";
 
  /*=============定义变量（CID，IID，SCORE，TIME...）======*/
     FILE *probe,*train,*result;
@@ -100,7 +100,7 @@ int main()
     time(&raw);
     //timeinfo = localtime(&raw);
     //printf("time:%s\n",asctime(timeinfo));
-    while( fscanf(train,"%d%d",&CID,&IID) != EOF){
+    while( fscanf(train,"%d%d%d",&CID,&IID,&SCORE) != EOF){
         CItem = iListAddItem(itemHeader,IID,NULL,&position,reclist);
         uListAddItem(userHeader,CID,IID,CItem);
 
@@ -109,7 +109,7 @@ int main()
     diftime = difftime(rawCur,raw);
     timeinfo = localtime(&rawCur);
     //printf("Current time is :%s",asctime(timeinfo));
-    printf("Difftime:%lf\n",diftime);
+    //printf("Difftime:%lf\n",diftime);
 
     initFreeSimList(SUFreeList,userHeader->counter);
     //initFreeDiffList(dListFree,itemHeader->counter);
@@ -117,7 +117,7 @@ int main()
     fclose(train);
 
     /*==================Initial Test User List===========================*/
-    while( fscanf(probe,"%d%d",&CID,&IID) != EOF){
+    while( fscanf(probe,"%d%d%d",&CID,&IID,&SCORE) != EOF){
         uListAddItem(probe_UserHeader,CID,IID,NULL);
     }
     fclose(probe);
@@ -128,12 +128,12 @@ int main()
     int RecordCounterProbe = 0,length = 0;
     double  RS = 0.0 ,EPL = 0,HL = 0,MEANIL = 0,IL;
     float  rank ,DIL , kDegree;
-
-    printf("Finish reading data file\n\n");
+    int k;
+    //printf("Finish reading data file\n\n");
 
     while( userList != NULL){
 
-        printf("User:%d\n",userList->id);
+        //printf("User:%d\n",userList->id);
         itemlist = userList->iList->next;
         time(&raw);
         while( itemlist != NULL){
@@ -159,7 +159,7 @@ int main()
         timeinfo = localtime(&rawCur);
         //printf("Current time is :%s",asctime(timeinfo));
 
-        printf("Finish SimUser  takes time:%lf\n",diftime);
+        //printf("Finish SimUser  takes time:%lf\n",diftime);
 
         recBegin(userList,reclist);
         /*------------------------------------------------------------------------------Initialize L recommendation list*/
@@ -176,10 +176,11 @@ int main()
             }
             dNode = dNode->next;
         }*/
-        for(rank = 0;rank < L;rank++){
-            iunHaveList(userList->dList,reclist[rank]->id,reclist[rank]->score,reclist[rank]->degree);
+
+        for(k = 0;k < L;k++){
+            iunHaveList(userList->dList,reclist[k]->id,reclist[k]->score,reclist[k]->degree);
         }
-        printf("Finish  Recommendation L\n");
+        //printf("Finish  Recommendation L\n");
         //if( userList->dList->counter != L)printf("NOD:%fDegree:%d\n",rank,dListUsed->counter);
 
         /*------------------------------------------------------------------------------END Initialize L recommendation list*/
@@ -229,10 +230,11 @@ int main()
                     }*/
                     length  = itemHeader->counter - userList->iList->counter;
                     dou   = FALSE;
+                    rank  =  0;
                     for(i = 0;(i <= position) && (dou != TRUE);i++){
                         if( reclist[i]->own != TRUE){
                             rank++;
-                            if( itemlist->id == reclist[rank]->id){
+                            if( itemlist->id == reclist[i]->id){
                                 RS  = RS + (rank / length);
                                 if(rank <= L)DIL++;
 
@@ -247,7 +249,7 @@ int main()
                 EPL = EPL + DIL / L;
 /*------------------------------------------------------------------------------------------Test RankingScore  END-----------*/
             }
-            print("     ");
+
             un = un->next;
         }
 
@@ -295,7 +297,7 @@ int main()
     HL                 = 0;
     int mama = 0,kaka = 0,total = 0;
     float temp = 0;
-    result = fopen(resultData,"w+");
+    result = fopen(resultData,"a+");
 
     while( un->next != NULL ){
         kDegree  = 0;
@@ -409,9 +411,14 @@ void swap(ItemNode **a,ItemNode **b){
 
 void initReclist(ItemNode **list){
     int i;
+    printf("position:%d",position);
+    getchar();
     for(i = 0;i <= position;i++){
+        printf("%f\t",list[i]->score);
         list[i]->score = 0;
     }
+    printf("\n");
+    getchar();
 }
 int division(ItemNode **list,int left,int right,int pivot_index){
     float pivot = list[pivot_index]->score;
@@ -479,7 +486,7 @@ void recBegin(uNode *list,ItemNode **reclist){
         diftime = difftime(rawCur,raw);
         //timeinfo = localtime(&rawCur);
         //printf("Current time is :%s",asctime(timeinfo));
-        printf("initial item score takes time\t%lfs\n",diftime);
+        //printf("initial item score takes time\t%lfs\n",diftime);
 
         if( SUList->counter != 0) printf("SUlist NotClean\n");
         time(&raw);
@@ -497,11 +504,12 @@ void recBegin(uNode *list,ItemNode **reclist){
             itemlist = itemlist->next;
         }*/
         quickSort(reclist,0,position);
+        initReclist(reclist);
         time(&rawCur);
         diftime = difftime(rawCur,raw);
         //timeinfo = localtime(&rawCur);
         //printf("Current time is :%s",asctime(timeinfo));
-        printf("initial recmmendation list takes  %lfs\n",diftime);
+        //printf("initial recmmendation list takes  %lfs\n",diftime);
 
     /*==============Free RecNode Testing============*/
     /*dNode = dListUsed->next;
