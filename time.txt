@@ -1,0 +1,14 @@
+CF
+TestTime:1
+dataSet:datas
+TimeCost:1100s
+Result:0.130674
+++++++++++++++++++
+TestTime:2
+dataSet:datas
+TimeCost:17s
+Result:0.130672
+++++++++++++++++++
+
+
+     
