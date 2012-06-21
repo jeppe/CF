@@ -7,16 +7,13 @@
 
 #define L   20
 
-char probeData[] = "./datas/probe.data",trainData[] = "./datas/train.data",resultData[] = "./datas/results.data";
+char probeData[] = "./delicious/probe.data",trainData[] = "./delicious/train.data",resultData[] = "./delicious/results.data";
 
  /*=============定义变量（CID，IID，SCORE，TIME...）======*/
     FILE *probe,*train,*result;
     time_t raw,rawCur;
     double diftime;
     struct tm * timeinfo;
-
-
-
 
     int  CID,IID,SCORE;
     float simValue,DFWEIGHT = 0.0,sum;
@@ -100,7 +97,7 @@ int main()
     time(&raw);
     //timeinfo = localtime(&raw);
     //printf("time:%s\n",asctime(timeinfo));
-    while( fscanf(train,"%d%d%d",&CID,&IID,&SCORE) != EOF){
+    while( fscanf(train,"%d%d",&CID,&IID) != EOF){
         CItem = iListAddItem(itemHeader,IID,NULL,&position,reclist);
         uListAddItem(userHeader,CID,IID,CItem);
 
@@ -117,7 +114,7 @@ int main()
     fclose(train);
 
     /*==================Initial Test User List===========================*/
-    while( fscanf(probe,"%d%d%d",&CID,&IID,&SCORE) != EOF){
+    while( fscanf(probe,"%d%d",&CID,&IID) != EOF){
         uListAddItem(probe_UserHeader,CID,IID,NULL);
     }
     fclose(probe);
@@ -176,10 +173,14 @@ int main()
             }
             dNode = dNode->next;
         }*/
-
-        for(k = 0;k < L;k++){
-            iunHaveList(userList->dList,reclist[k]->id,reclist[k]->score,reclist[k]->degree);
+        rank = 0;
+        for(k = 0;rank < L;k++){
+            if( reclist[k]->own != TRUE){
+                rank++;
+                iunHaveList(userList->dList,reclist[k]->id,reclist[k]->score,reclist[k]->degree);
+            }
         }
+
         //printf("Finish  Recommendation L\n");
         //if( userList->dList->counter != L)printf("NOD:%fDegree:%d\n",rank,dListUsed->counter);
 
@@ -332,9 +333,9 @@ int main()
                 neighbor = neighbor->next;
             }
 
-        fprintf(result,"UN:%d\tmama:%d\tHL--UN:%f\tTotal:%d\n",un->id,mama,(HL - temp),(counter - total));
+/*        fprintf(result,"UN:%d\tmama:%d\tHL--UN:%f\tTotal:%d\n",un->id,mama,(HL - temp),(counter - total));
         fprintf(result,"-----------------------\n");
-        temp = HL;
+        temp = HL;*/
         total = counter;
         }
 
@@ -411,14 +412,12 @@ void swap(ItemNode **a,ItemNode **b){
 
 void initReclist(ItemNode **list){
     int i;
-    printf("position:%d",position);
-    getchar();
+
     for(i = 0;i <= position;i++){
-        printf("%f\t",list[i]->score);
+        //printf("%f\t",list[i]->score);
         list[i]->score = 0;
     }
-    printf("\n");
-    getchar();
+
 }
 int division(ItemNode **list,int left,int right,int pivot_index){
     float pivot = list[pivot_index]->score;
@@ -429,7 +428,7 @@ int division(ItemNode **list,int left,int right,int pivot_index){
     for(i = left;i <= right - 1;i++){
 
         if( list[i]->score > pivot){
-            swap(&list[left],&list[storeIndex]);
+            swap(&list[i],&list[storeIndex]);
             storeIndex++;
         }
     }
@@ -504,7 +503,7 @@ void recBegin(uNode *list,ItemNode **reclist){
             itemlist = itemlist->next;
         }*/
         quickSort(reclist,0,position);
-        initReclist(reclist);
+
         time(&rawCur);
         diftime = difftime(rawCur,raw);
         //timeinfo = localtime(&rawCur);
