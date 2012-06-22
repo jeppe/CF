@@ -21,7 +21,7 @@
 typedef struct ItemNode{
 
   int id;
-  float score;
+  double score;
   int  degree;
   char own;
   struct ItemNode *next;

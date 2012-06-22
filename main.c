@@ -17,7 +17,7 @@ char probeData[] = "./delicious/probe.data",trainData[] = "./delicious/train.dat
 
     int  CID,IID,SCORE;
     float simValue,DFWEIGHT = 0.0,sum;
-    int   counter = 0,position = -1;
+    int   counter = 0,position = -1,index_position = 0;
     int   DiffItemCounter = 0,DFID;
     char  flag = TRUE,dou = FALSE;
 
@@ -52,7 +52,8 @@ void createRecItemList(DiffList *header,int id,int degree,float weight);
 void swap(ItemNode **a,ItemNode **b);
 int  division(ItemNode **list,int left,int right,int pivot_index);
 void quickSort(ItemNode **list,int left,int right);
-
+void insert_sort(ItemNode **list,int left,int right);
+int  get_nozero_position(ItemNode **list,int left,int right);
 /*---------------------------------------------------------------------------------------Initial reclist----------------*/
 void initReclist(ItemNode **list);
 
@@ -60,7 +61,6 @@ int main()
 {
     SUListTail = NULL;
     ItemNode *reclist[232657] = {NULL};
-    printf("Testing\n");
 
     userHeader = malloc(sizeof(uList));
     userHeader->counter = 0;
@@ -126,11 +126,11 @@ int main()
     double  RS = 0.0 ,EPL = 0,HL = 0,MEANIL = 0,IL;
     float  rank ,DIL , kDegree;
     int k;
-    //printf("Finish reading data file\n\n");
+    printf("Finish reading data file\n\n");
 
     while( userList != NULL){
 
-        //printf("User:%d\n",userList->id);
+        printf("User:%d\n",userList->id);
         itemlist = userList->iList->next;
         time(&raw);
         while( itemlist != NULL){
@@ -420,7 +420,7 @@ void initReclist(ItemNode **list){
 
 }
 int division(ItemNode **list,int left,int right,int pivot_index){
-    float pivot = list[pivot_index]->score;
+    double pivot = list[pivot_index]->score;
     int storeIndex = left;
     int i;
     swap(&list[pivot_index],&list[right]);
@@ -435,16 +435,39 @@ int division(ItemNode **list,int left,int right,int pivot_index){
     swap(&list[right],&list[storeIndex]);
     return storeIndex;
 }
+void insert_sort(ItemNode **list,int left,int right){
+    ItemNode *sentry;
+    int    i,j;
+    //printf("enter insert sort\n");
+    for(i = left + 1;i <= right;i++){
+        if( list[i]->score > list[i - 1]->score){
+            sentry = list[i];
+            list[i] = list[i - 1];
+            for( j = i -2;(j >= 0) && (sentry->score > list[j]->score)   ;j--) {
+
+                list[j + 1] = list[j];
+            }
+            list[j + 1] = sentry;
+        }
+    }
+}
 
 void quickSort(ItemNode **list,int left,int right){
     int index,pivot_index = (left + right) / 2;
 
     if( left < right){
-        index = division(list,left,right,pivot_index);
-        quickSort(list,left,index - 1);
-        quickSort(list,index + 1,right);
+        if( right - left + 1 <= 16){
+            insert_sort(list,left,right);
+        }
+        else{
+            index = division(list,left,right,pivot_index);
+            quickSort(list,left,index - 1);
+            quickSort(list,index + 1,right);
+
+        }
     }
 }
+
 void recBegin(uNode *list,ItemNode **reclist){
     /*===========开始寻找每个用户的推荐物品并构建推荐链表============================*/
     //userList = userHeader->next;
@@ -502,13 +525,14 @@ void recBegin(uNode *list,ItemNode **reclist){
             itemlist->score = 0;
             itemlist = itemlist->next;
         }*/
-        quickSort(reclist,0,position);
+        index_position = get_nozero_position(reclist,0,position);
+        quickSort(reclist,0,index_position);
 
         time(&rawCur);
         diftime = difftime(rawCur,raw);
         //timeinfo = localtime(&rawCur);
         //printf("Current time is :%s",asctime(timeinfo));
-        //printf("initial recmmendation list takes  %lfs\n",diftime);
+        printf("initial recmmendation list takes  %lfs\n",diftime);
 
     /*==============Free RecNode Testing============*/
     /*dNode = dListUsed->next;
@@ -554,7 +578,31 @@ void initFreeSimList(SimUserList *header,int len){
     }
 
 }
+int  get_nozero_position(ItemNode **list,int left,int right){
+    int tp = 0;
+    int i = 0,j = right;
 
+    if(left < right){
+        while( i < j){
+            while( (j > i) && (list[j]->score == 0) ) j--;
+
+            while( (j > i) && (list[i]->score > 0)) i++;
+
+            if( j == i) {
+
+
+                tp = i;
+
+            }
+            else{
+
+                swap(&list[i],&list[j]);
+            }
+
+        }
+    }
+    return tp;
+}
 void createSimList(SimUserList *header,int id,float sim,uNode *self){
         SimNode *list;
 
