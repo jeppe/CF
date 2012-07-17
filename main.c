@@ -7,7 +7,7 @@
 
 #define L   20
 
-char probeData[] = "./delicious/probe.data",trainData[] = "./delicious/train.data",resultData[] = "./delicious/results.data";
+char probeData[] = "./RYM/probe.data",trainData[] = "./RYM/train.data",resultData[] = "./RYM/results.data";
 
  /*=============定义变量（CID，IID，SCORE，TIME...）======*/
     FILE *probe,*train,*result;
@@ -97,7 +97,7 @@ int main()
     time(&raw);
     //timeinfo = localtime(&raw);
     //printf("time:%s\n",asctime(timeinfo));
-    while( fscanf(train,"%d%d",&CID,&IID) != EOF){
+    while( fscanf(train,"%d%d%d",&CID,&IID,&SCORE) != EOF){
         CItem = iListAddItem(itemHeader,IID,NULL,&position,reclist);
         uListAddItem(userHeader,CID,IID,CItem);
 
@@ -114,7 +114,7 @@ int main()
     fclose(train);
 
     /*==================Initial Test User List===========================*/
-    while( fscanf(probe,"%d%d",&CID,&IID) != EOF){
+    while( fscanf(probe,"%d%d%d",&CID,&IID,&SCORE) != EOF){
         uListAddItem(probe_UserHeader,CID,IID,NULL);
     }
     fclose(probe);
@@ -130,7 +130,7 @@ int main()
 
     while( userList != NULL){
 
-        printf("User:%d\n",userList->id);
+        //printf("User:%d\n",userList->id);
         itemlist = userList->iList->next;
         time(&raw);
         while( itemlist != NULL){
@@ -201,7 +201,7 @@ int main()
                 un->self  = userList;
 
         /*-------------------------------------------------------------------------------Test RankingScore-----------*/
-                RecordCounterProbe += un->iList->counter;
+                //RecordCounterProbe += un->iList->counter;
 
                 itemlist = un->iList->next;
                 DIL      = 0;
@@ -236,9 +236,9 @@ int main()
                         if( reclist[i]->own != TRUE){
                             rank++;
                             if( itemlist->id == reclist[i]->id){
+                                RecordCounterProbe++;
                                 RS  = RS + (rank / length);
                                 if(rank <= L)DIL++;
-
                                 dou  = TRUE;
                             }
                         }
@@ -288,7 +288,7 @@ int main()
 
     EPL = EPL / counter;
     printf("Source EPL:%f\tOUD:%d\n",EPL,(itemHeader->counter * userHeader->counter) / RecordCounterProbe);
-    EPL = EPL * (itemHeader->counter * userHeader->counter) / RecordCounterProbe;
+    EPL = (EPL * itemHeader->counter / RecordCounterProbe)* userHeader->counter;
 
     /*-----------------------------------------------------------------------------------------Diversity Test Begin-----------------*/
     un = probe_UserHeader->next;
@@ -316,16 +316,14 @@ int main()
             IL = IL / L;
             MEANIL += IL;
             mama = 0;
-            //printf("Test\t");
+
             while( neighbor != NULL){
                 if( neighbor->self != NULL){
                     HL += (1 - Get_QIJL(un->self->dList,neighbor->self->dList) / L);
                     if( Get_QIJL(un->self->dList,neighbor->self->dList) > 10){
                         mama++;
                         kaka++;
-
                     }
-
                     counter++;
                     //printf("un----HL:%f\n",(1 - Get_QIJL(un->self->dList,neighbor->self->dList) / L));
                 }
@@ -355,47 +353,6 @@ int main()
     fprintf(result,"RS:%1.4f\tEPL:%f\tHL:%f\tMEANIL:%f\n",RS,EPL,HL,MEANIL);
     fclose(result);
     printf("Finish!\n");
-
-
-    /*================OLD TEST=======================*/
-    /*printf("Begin Testing\t\tCounter:%d\n\n",counter);
-
-    uNode  *currentUser;
-    DiffNode  *bufferNode;
-    int RecordCounterProbe = 0,length = 0;
-    float  RS = 0.0,rank = 0.0;
-
-    result = fopen(resultData,"w+");
-    //counter = 0;
-    while( fscanf(probe,"%d%d%d",&CID,&IID,&SCORE) != EOF ){
-
-        currentUser = userHeader->next;
-        while(currentUser != NULL){
-
-            bufferNode = currentUser->dList->next;
-
-            if( currentUser->id == CID){
-                RecordCounterProbe++;
-                length = currentUser->dList->counter;
-                //printf("Current User ID:%d\tRecList length:%d\t",CID,length);
-                rank = 0;
-                while( bufferNode != NULL){
-                    rank++;
-
-                    if( bufferNode->id == IID){
-                        fprintf(result,"%1.5f\n",(rank / length));
-                        RS = RS + (rank / length);
-                        //printf("Rank:%f\tRS:%f\n",rank,RS);
-                        break;
-                    }
-                    bufferNode = bufferNode->next;
-                }
-                break;
-            }
-            currentUser = currentUser->next;
-        }
-    }*/
-
 
     //getchar();
     return 0;
@@ -532,7 +489,7 @@ void recBegin(uNode *list,ItemNode **reclist){
         diftime = difftime(rawCur,raw);
         //timeinfo = localtime(&rawCur);
         //printf("Current time is :%s",asctime(timeinfo));
-        printf("initial recmmendation list takes  %lfs\n",diftime);
+        //printf("initial recmmendation list takes  %lfs\n",diftime);
 
     /*==============Free RecNode Testing============*/
     /*dNode = dListUsed->next;
@@ -770,26 +727,3 @@ void createRecItemList(DiffList *header,int id,int degree,float weight){
         }
     }
 }
-/*itemlist = itemHeader->next;
-        while( itemlist != NULL){
-            flag = searchItemList(userList->iList,itemlist->id);
-            sum          = 0.0;
-            DFWEIGHT     = 0.0;
-            if( flag != TRUE){
-                 ptrSimSteady = userList->sList->next;
-
-                 //printf("found item %d sim list length %d\n",itemlist->id,userList->sList->counter);
-                 while( ptrSimSteady != NULL){
-
-                    sum += ptrSimSteady->sim;
-                    DFWEIGHT += ( ptrSimSteady->sim * getScore(ptrSimSteady->original->iList,itemlist->id) );
-
-                    ptrSimSteady = ptrSimSteady->next;
-                 }
-                 DFWEIGHT = DFWEIGHT / sum ;
-                 //printf("DFWEIGHT:%f\n",DFWEIGHT);
-                 //getchar();
-                 iunHaveList(userList->dList,itemlist->id,DFWEIGHT);
-            }
-            itemlist = itemlist->next;
-        }*/

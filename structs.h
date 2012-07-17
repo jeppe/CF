@@ -30,7 +30,7 @@ typedef struct ItemNode{
 
 typedef struct ItemList{
 
-    int counter;
+    unsigned int counter;
     struct ItemNode *next;
 }ItemList;
 
@@ -43,7 +43,7 @@ typedef struct SimNode{
 }SimNode;
 
 typedef struct SimUserList{
-    int counter;
+    unsigned int counter;
     float sum;
     struct SimNode  *next;
 }SimUserList;
@@ -57,7 +57,7 @@ typedef struct DiffNode{
 }DiffNode;
 
 typedef struct DiffList{
-    int counter;
+    unsigned int counter;
     struct DiffNode *next;
 }DiffList;
 
@@ -74,7 +74,7 @@ typedef struct uNode{
 
 typedef struct uList{
 
-    int counter;
+    unsigned int counter;
     struct uNode  *next;
 }uList;
 
